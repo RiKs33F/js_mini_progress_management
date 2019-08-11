@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>進捗管理ツール</title>
+    <style>
+        h1 {
+            padding-top: 20px;
+            text-align: center;
+            font-size: 60px;
+            margin: 0;
+        }
+
+        h2 {
+            text-align: left;
+            font-size: 12px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .input_area {
+            text-align: center;
+            height: 30px;
+            line-height: 60px;
+        }
+
+        .input_name {
+            width: 600px;
+            height: 50px;
+            font-size: 30px;
+            box-shadow: 5px 5px 10px gray;
+        }
+
+        .input_date {
+            height: 50px;
+            font-size: 30px;
+            box-shadow: 5px 5px 10px gray;
+            margin-left: 10px;
+        }
+
+        .output_area {
+            text-align: center;
+            margin-top: 70px;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .btn_register {
+            font-size: 38px;
+            color: white;
+            background-color: blue;
+            box-shadow: 5px 5px 10px gray;
+            margin-left: 10px;
+            padding: 2px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn_register:hover {
+            opacity: 0.7;
+        }
+
+        .btn_plus {
+            background-color: red;
+            color: white;
+            border-radius: 10px;
+            margin: 0 10px;
+        }
+
+        .btn_plus:hover,
+        .btn_minus:hover {
+            opacity: 0.5;
+            cursor: pointer;
+        }
+
+
+        .btn_minus {
+            background-color: blue;
+            color: white;
+            border-radius: 10px;
+            margin: 0 10px;
+        }
+
+
+        .table {
+            margin: auto;
+            border-collapse: collapse;
+            box-shadow: 5px 5px 10px gray;
+        }
+
+        tr:hover {
+            opacity: 0.8;
+        }
+
+        thead,
+        td {
+            padding: 0 20px;
+        }
+
+        th,
+        td {
+            border: 3px solid black;
+            padding: 0 20px;
+        }
+
+        thead {
+            font-size: 24px;
+            font-weight: bold;
+            background-color: skyblue;
+        }
+
+        td {
+            font-size: 20px;
+        }
+
+        .btn_delete {
+            opacity: 0.2;
+        }
+
+        .btn_delete:hover {
+            opacity: 1.0;
+            cursor: pointer;
+        }
+
+        .no {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>進捗管理</h1>
+    <h2>version:1.0.0 / created by <a href="https://www.riks33f.com" target="_blank">riks33f.com</a></h2>
+    <div class="input_area">
+        <input class="input_date" id="task_date" type="date" value="">
+        <input class="input_name" id="task_name" type="text" name="" id="">
+        <a class="btn_register" onclick="register_task(event)">登録</a>
+    </div>
+    <div class="output_area">
+        <table class="table" id="task_data">
+        </table>
+    </div>
+</body>
+<script>
+    'use strict';
+    var tasks = [];
+    load();
+
+    function load() {
+        document.getElementById('task_data').innerHTML = '';
+        document.getElementById('task_date').value = get_strToday();
+
+        var thead = document.createElement('thead');
+        var tr_title = document.createElement('tr');
+        var th_no = document.createElement('th');
+        var text_th_no = document.createTextNode('No');
+        th_no.appendChild(text_th_no);
+        th_no.setAttribute('class', 'no');
+        var th_date = document.createElement('th');
+        var text_th_date = document.createTextNode('期限');
+        th_date.appendChild(text_th_date);
+        var th_name = document.createElement('th');
+        var text_th_name = document.createTextNode('作業名');
+        th_name.appendChild(text_th_name);
+        var th_status = document.createElement('th');
+        var text_th_status = document.createTextNode('ステータス');
+        th_status.appendChild(text_th_status);
+        var th_progress = document.createElement('th');
+        var text_th_progress = document.createTextNode('進捗');
+        th_progress.appendChild(text_th_progress);
+        th_progress.setAttribute('colspan', 3);
+        tr_title.appendChild(th_no);
+        tr_title.appendChild(th_date);
+        tr_title.appendChild(th_name);
+        tr_title.appendChild(th_status);
+        tr_title.appendChild(th_progress);
+        thead.appendChild(tr_title);
+        document.getElementById('task_data').appendChild(thead);
+
+        var local_storage = '';
+        try {
+            local_storage = localStorage.getItem('mini_progress_management.js.riks33f.com');
+        } catch (error) {
+            localStorage.setItem('mini_progress_management.js.riks33f.com', '');
+            return;
+        }
+
+        tasks = JSON.parse(local_storage);
+        if (tasks == null) {
+            return;
+        }
+        if (tasks.length > 0) {
+            for (var n = 0; n < tasks.length; n++) {
+
+                var tr = document.createElement('tr');
+                var td_no = document.createElement('td');
+                var text_no = document.createTextNode(tasks[n][0]);
+                td_no.appendChild(text_no);
+                td_no.setAttribute('class', 'no');
+
+                var td_date = document.createElement('td');
+                var text_date = document.createTextNode(tasks[n][1]);
+                td_date.appendChild(text_date);
+
+                var td_name = document.createElement('td');
+                var text_name = document.createTextNode(tasks[n][2]);
+                td_name.appendChild(text_name);
+
+                var td_progress = document.createElement('td');
+                var a_minus = document.createElement('a');
+                var text_a_minus = document.createTextNode('－');
+                a_minus.appendChild(text_a_minus);
+                a_minus.setAttribute('class', 'btn_minus');
+                a_minus.setAttribute('onclick', 'minus_progress(event)');
+                var progress = document.createElement('progress');
+                var text_progress = tasks[n][3];
+                progress.setAttribute('value', text_progress);
+                progress.setAttribute('max', 100);
+
+                var text_progress_rate = document.createTextNode(('00' + text_progress).slice(-3) + '%');
+                var a_plus = document.createElement('a');
+                var text_a_plus = document.createTextNode('＋');
+                a_plus.appendChild(text_a_plus);
+                a_plus.setAttribute('class', 'btn_plus');
+                a_plus.setAttribute('onclick', 'plus_progress(event)');
+                td_progress.appendChild(text_progress_rate);
+                td_progress.appendChild(a_minus);
+                td_progress.appendChild(progress);
+                td_progress.appendChild(a_plus);
+
+                var td_status = document.createElement('td');
+                var text_status = '';
+                if (text_progress === 0) {
+                    text_status = document.createTextNode('未着手');
+                } else if (text_progress === 100) {
+                    text_status = document.createTextNode('完了');
+                } else {
+                    text_status = document.createTextNode('対応中');
+                }
+                td_status.appendChild(text_status);
+
+                var td_a = document.createElement('td');
+                var a = document.createElement('a');
+                var text_a = document.createTextNode('削除');
+                a.appendChild(text_a);
+                a.setAttribute('class', 'btn_delete');
+                a.setAttribute('onclick', 'delete_task(event)');
+                td_a.appendChild(a);
+
+                // trにセット
+                tr.appendChild(td_no);
+                tr.appendChild(td_date);
+                tr.appendChild(td_name);
+                tr.appendChild(td_status);
+                tr.appendChild(td_progress);
+                tr.appendChild(td_a);
+
+                // 遅延フラグ
+                var delay_flag = compare_date(tasks[n][1]);
+
+                // 作業が遅延しているもの（期限が経過し、完了していない）
+                if (text_progress !== 100
+                    && delay_flag === true) {
+                    tr.setAttribute('style', 'background-color:pink;');
+                }
+
+                // 作業が完了しているもの
+                if (text_progress === 100) {
+                    tr.setAttribute('style', 'background-color:lightgray;');
+                }
+
+                // tableにセット
+                document.getElementById('task_data').appendChild(tr);
+            }
+        }
+    }
+
+
+    function register_task(event) {
+        event.preventDefault();
+        var no = get_max_no();
+        var task_date = document.getElementById('task_date').value;
+        if (!task_date) {
+            alert('日付を入力して下さい。');
+            return;
+        }
+        var task_name = document.getElementById('task_name').value;
+        var task_new = [++no, task_date, task_name, 0];
+        if (tasks == null) {
+            tasks = [];
+        }
+        tasks.push(task_new);
+        tasks = JSON.stringify(tasks);
+        localStorage.setItem('mini_progress_management.js.riks33f.com', tasks);
+        load();
+
+        // 初期化
+        document.getElementById('task_name').value = "";
+    }
+
+    function get_strToday() {
+        var date = new Date();
+        var yyyy = String(date.getFullYear());
+        var mm = ('0' + String(date.getMonth() + 1)).slice(-2);
+        var dd = ('0' + String(date.getDate())).slice(-2);
+        return yyyy + '-' + mm + '-' + dd;
+    }
+
+    function compare_date(task_date) {
+        var yyyy = Number(task_date.substring(0, 4));
+        var mm = Number(task_date.substring(5, 7)) - 1;
+        var dd = Number(task_date.substring(8, 10));
+        var date = new Date();
+        var compare_date = new Date(yyyy, mm, dd, 23, 59, 59);
+        if (date > compare_date) {
+            return true; // 期限が経過している
+        } else if (date < compare_date) {
+            return false; // 期限が経過していない
+        }
+    }
+    function delete_task(event) {
+        event.preventDefault();
+        var task_no = event.target.parentElement.parentElement.querySelector('td').innerHTML;
+        var n = get_index(task_no);
+        tasks.splice(n, 1);
+        tasks = JSON.stringify(tasks);
+        localStorage.setItem('mini_progress_management.js.riks33f.com', tasks);
+        load();
+    }
+    function plus_progress(event) {
+        event.preventDefault();
+        var task_no = event.target.parentElement.parentElement.querySelector('td').innerHTML;
+        var index = get_index(task_no);
+
+        var progress = get_progress(index);
+        if (progress >= 100) {
+            return;
+        } else {
+            tasks[index][3] = progress + 5;
+            tasks = JSON.stringify(tasks);
+            localStorage.setItem('mini_progress_management.js.riks33f.com', tasks);
+            load();
+        }
+    }
+    function get_progress(index) {
+        var local_storage = localStorage.getItem('mini_progress_management.js.riks33f.com');
+        if (local_storage == null) {
+            return;
+        }
+        tasks = JSON.parse(local_storage);
+        var progress = 10;
+        if (tasks.length > 0) {
+            progress = tasks[index][3];
+            return progress;
+        }
+    }
+    function minus_progress(event) {
+        event.preventDefault();
+        var task_no = event.target.parentElement.parentElement.querySelector('td').innerHTML;
+        var index = get_index(task_no);
+
+        var progress = get_progress(index);
+        if (progress <= 0) {
+            return;
+        } else {
+            tasks[index][3] = progress - 5;
+            tasks = JSON.stringify(tasks);
+            localStorage.setItem('mini_progress_management.js.riks33f.com', tasks);
+            load();
+        }
+    }
+    function get_index(no) {
+        var local_storage = localStorage.getItem('mini_progress_management.js.riks33f.com');
+        if (local_storage == null) {
+            return;
+        }
+        tasks = JSON.parse(local_storage);
+        var index = 0;
+        if (tasks.length > 0) {
+            for (var n = 0; n < tasks.length; n++) {
+                if (Number(no) === Number(tasks[n][0])) {
+                    index = n;
+                    break;
+                }
+            }
+            return index;
+        }
+    }
+    function get_max_no() {
+        var max_no = 0;
+        var local_storage = localStorage.getItem('mini_progress_management.js.riks33f.com');
+        if (local_storage == null) {
+            return 0;
+        }
+        tasks = JSON.parse(local_storage);
+        if (tasks.length === 0) {
+            return 0;
+        } else if (tasks.length > 0) {
+            for (var n = 0; n < tasks.length; n++) {
+                if (max_no < Number(tasks[n][0])) {
+                    max_no = Number(tasks[n][0]);
+                }
+            }
+            return max_no;
+        }
+    }
+</script>
+
+</html>
